@@ -179,6 +179,24 @@ footer {
   font-size: 13px;
 }
 
+.participant-item {
+  justify-content: space-between;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.remove-btn:hover {
+  background: rgba(198,40,40,0.06);
+}
+
 /* subtle circular "avatar" dot */
 .participant-item::before {
   content: "";

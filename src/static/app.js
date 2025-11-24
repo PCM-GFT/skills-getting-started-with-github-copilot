@@ -30,12 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        // Build participants HTML (safe-escaped)
+        // Build participants HTML (safe-escaped) with a remove button for each participant
         const participants = Array.isArray(details.participants) ? details.participants : [];
         let participantsHtml = "";
         if (participants.length > 0) {
           participantsHtml = `<div class="participants"><strong>Participants:</strong><ul class="participants-list">${participants
-            .map((p) => `<li class="participant-item">${escapeHtml(p)}</li>`)
+            .map(
+              (p) =>
+                `<li class="participant-item"><span class="participant-email">${escapeHtml(
+                  p
+                )}</span><button class="remove-btn" data-activity="${escapeHtml(name)}" data-email="${escapeHtml(
+                  p
+                )}" title="Remove participant">✖</button></li>`
+            )
             .join("")}</ul></div>`;
         } else {
           participantsHtml = `<div class="participants"><strong>Participants:</strong><p class="muted">No participants yet</p></div>`;
@@ -50,6 +57,44 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         activitiesList.appendChild(activityCard);
+
+        // Attach click handlers for remove buttons inside this activity card
+        const removeButtons = activityCard.querySelectorAll('.remove-btn');
+        removeButtons.forEach((btn) => {
+          btn.addEventListener('click', async (ev) => {
+            const activityName = btn.getAttribute('data-activity');
+            const email = btn.getAttribute('data-email');
+
+            if (!confirm(`Unregister ${email} from "${activityName}"?`)) return;
+
+            try {
+              const res = await fetch(
+                `/activities/${encodeURIComponent(activityName)}/signup?email=${encodeURIComponent(email)}`,
+                { method: 'DELETE' }
+              );
+
+              const result = await res.json();
+              if (res.ok) {
+                messageDiv.textContent = result.message;
+                messageDiv.className = 'message success';
+                messageDiv.classList.remove('hidden');
+                // Refresh activities to reflect change
+                fetchActivities();
+              } else {
+                messageDiv.textContent = result.detail || 'Failed to unregister';
+                messageDiv.className = 'message error';
+                messageDiv.classList.remove('hidden');
+              }
+
+              setTimeout(() => messageDiv.classList.add('hidden'), 4000);
+            } catch (error) {
+              console.error('Error unregistering participant:', error);
+              messageDiv.textContent = 'Failed to unregister. Please try again.';
+              messageDiv.className = 'message error';
+              messageDiv.classList.remove('hidden');
+            }
+          });
+        });
 
         // Add option to select dropdown
         const option = document.createElement("option");
